@@ -72,3 +72,64 @@ int main() {
 	return 0;
 }
 
+#include <stdio.h>
+void initBoard(char **board, int size) {
+	for (int i =0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			board[i][j] = '-';
+}
+
+void printBoard(char **board, int size) {
+	printf("\n");
+	for (int i = 0; i < size; i++) {
+		for (int j =0; j < size; j++)
+			printf("%c", board[i][j]);
+		printf("\n");
+	}
+	printf("\n");
+}
+
+int validMove(char **board, int r, int c, int size) {
+	return r >= 0 && r < size && c >= 0 && c < size && board[r][c] == '-';
+}
+
+int checkWin(char **board, int size, char symbol) {
+	int win;
+
+	for (int i = 0; i < size; i++) {
+		win = 1;
+		for (int j =0; j < size; j++)
+			if (board[i][j] != symbol) win = 0;
+		if (win) return 1;
+	
+
+	win = 1;
+	for (int j = 0; j < size; j++)
+		if (board[j][i] != symbol) win = 0;
+	if (win) return 1;
+
+}
+
+win = 1;
+for (int i = 0;  i < size; i++)
+    if (board[i][i] != symbol) win = 0;
+if (win) return 1;
+
+win = 1;
+for (int i =0; i < size; i++)
+    if (board[i][size - i -1] != symbol) win = 0;
+if (win) return 1;
+
+return 0;
+}
+
+int checkDraw(char **board, int size) {
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			if (board[i][j] == '-') return 0;
+	return 1;
+}
+
+void logMove(FILE *fp, int r, int c, char symbol) {
+	fprintf(fp, "Player %c: (%d, %d)\n", symbol, r, c);
+}

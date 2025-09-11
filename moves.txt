@@ -1,0 +1,5 @@
+Player X: (0, 0)
+Player O: (1, 1)
+Player X: (0, 1)
+Player O: (2, 2)
+Player X: (0, 2)
