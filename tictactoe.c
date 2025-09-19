@@ -4,132 +4,159 @@
 #define MIN 3
 #define MAX 10
 
-void initBoard(char **board, int size);
-void printBoard(char **board, int size);
-int validMove(char **board, int r, int c, int size);
-int checkWin(char **board, int size, char symbol);
-int checkDraw(char **board, int size);
+// Function declaration
+void initBoard(char *board, int size);
+void printBoard(char *board, int size);
+int isValidMove(char *board, int r, int c, int size);
+int checkWin(char *board, int size, char symbol);
+int checkDraw(char *board, int size);
 void logMove(FILE *fp, int r, int c, char symbol);
 
 int main() {
-	int size;
-	printf("Enter board size (%d-%d): ", MIN, MAX);
-	scanf("%d", &size);
+    int size;
 
-	if (size < MIN || size > MAX) {
-		printf("Invalid size. \n");
-		return 1;
-	}
+    // Ask user for board size
+    printf("Enter board size (%d-%d): ", MIN, MAX);
+    scanf("%d", &size);
 
-	char **board = malloc(size * sizeof(char *));
-	for (int i = 0; i < size; i++)
-		board[i] = malloc(size * sizeof(char));
+    // Validate board size
+    if (size < MIN || size > MAX) {
+        printf("Invalid board size.\n");
+        return 1;
+    }
 
-	initBoard(board, size);
 
-	FILE *fp = fopen("moves.txt", "w");
-	if (!fp) {
-		printf("File error. \n");
-		return 1;
-	}
+    // Allocate memory for 1D board
+    char *board = malloc(size * size * sizeof(char));
+    if (board == NULL) {
+        printf("Memory allocation failed.\n");
+        return 1;
+    }
 
-	char players[2] = {'X', 'O'};
-	int turn = 0, row, col;
+    initBoard(board, size); // Fill board with '-'
 
-	while (1) {
-		printBoard(board, size);
-		printf("Player %c - Enter row and col: ", players[turn]);
-		scanf("%d %d", &row, &col);
+    // Open file to log moves
+    FILE *fp = fopen("moves.txt", "w");
+    if (fp == NULL) {
+        printf("Error opening file.\n");
+        free(board);
+        return 1;
+    }
 
-		if (!validMove(board, row, col, size)) {
-			printf("Invalid move. Try again. \n");
-			continue;
-		}
+    char players[2] = {'X', 'O'};
+    int turn = 0, row, col;
 
-		board[row][col] = players[turn];
-		logMove(fp, row, col, players[turn]);
+    // Main game loop
+    while (1) {
+        printBoard(board, size); // Show current board
 
-		if (checkWin(board, size, players[turn])) {
-		   printBoard(board, size);
-		   printf("Player %c wins! \n", players[turn]);
-		   break;
-		}
+	// Ask current player for move
+        printf("Player %c - Enter row and column: ", players[turn]);
+        scanf("%d %d", &row, &col);
 
-		if (checkDraw(board, size)) {
-			printBoard(board, size);
-			printf("Draw! \n");
-			break;
-		}
+	// Check if move is valid
+        if (!isValidMove(board, row, col, size)) {
+            printf("Invalid move. Try again.\n");
+            continue;
+        }
 
-		turn = 1 - turn;
-	}
+	// Update board and log move
+        board[row * size + col] = players[turn];
+        logMove(fp, row, col, players[turn]);
 
-	fclose(fp);
-	for (int i = 0;  i < size; i++)
-		free(board[i]);
-	free(board);
+	// Check for win
+        if (checkWin(board, size, players[turn])) {
+            printBoard(board, size);
+            printf("Player %c wins!\n", players[turn]);
+            break;
+        }
 
-	return 0;
+
+	// Check for draw
+        if (checkDraw(board, size)) {
+            printBoard(board, size);
+            printf("Game is a draw.\n");
+            break;
+        }
+
+	// Switch turn
+        turn = 1 - turn;
+    }
+
+    fclose(fp);
+    free(board);
+    return 0;
 }
 
 #include <stdio.h>
-void initBoard(char **board, int size) {
-	for (int i =0; i < size; i++)
-		for (int j = 0; j < size; j++)
-			board[i][j] = '-';
+
+// Initialize board with '-'
+void initBoard(char *board, int size) {
+    for (int i = 0; i < size * size; i++)
+        board[i] = '-';
 }
 
-void printBoard(char **board, int size) {
-	printf("\n");
-	for (int i = 0; i < size; i++) {
-		for (int j =0; j < size; j++)
-			printf("%c", board[i][j]);
-		printf("\n");
-	}
-	printf("\n");
+// Print the board in grid format
+void printBoard(char *board, int size) {
+    printf("\n");
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++)
+            printf(" %c ", board[i * size + j]);
+        printf("\n");
+    }
+    printf("\n");
 }
 
-int validMove(char **board, int r, int c, int size) {
-	return r >= 0 && r < size && c >= 0 && c < size && board[r][c] == '-';
+// Check if move is inside bounds and cell is empty
+int isValidMove(char *board, int r, int c, int size) {
+    if (r < 0 || r >= size || c < 0 || c >= size)
+        return 0;
+    return board[r * size + c] == '-';
 }
 
-int checkWin(char **board, int size, char symbol) {
-	int win;
+// Check if player has won
+int checkWin(char *board, int size, char symbol) {
+    int win;
 
-	for (int i = 0; i < size; i++) {
-		win = 1;
-		for (int j =0; j < size; j++)
-			if (board[i][j] != symbol) win = 0;
-		if (win) return 1;
-	
+    // Check rows
+    for (int i = 0; i < size; i++) {
+        win = 1;
+        for (int j = 0; j < size; j++)
+            if (board[i * size + j] != symbol) win = 0;
+        if (win) return 1;
+    }
 
-	win = 1;
-	for (int j = 0; j < size; j++)
-		if (board[j][i] != symbol) win = 0;
-	if (win) return 1;
+    // Check columns
+    for (int j = 0; j < size; j++) {
+        win = 1;
+        for (int i = 0; i < size; i++)
+            if (board[i * size + j] != symbol) win = 0;
+        if (win) return 1;
+    }
 
+    // Check main  diagonal
+    win = 1;
+    for (int i = 0; i < size; i++)
+        if (board[i * size + i] != symbol) win = 0;
+    if (win) return 1;
+
+    // Check anti-diagonal
+    win = 1;
+    for (int i = 0; i < size; i++)
+        if (board[i * size + (size - i - 1)] != symbol) win = 0;
+    if (win) return 1;
+
+    return 0;
 }
 
-win = 1;
-for (int i = 0;  i < size; i++)
-    if (board[i][i] != symbol) win = 0;
-if (win) return 1;
-
-win = 1;
-for (int i =0; i < size; i++)
-    if (board[i][size - i -1] != symbol) win = 0;
-if (win) return 1;
-
-return 0;
+// Check if board is full (draw)
+int checkDraw(char *board, int size) {
+    for (int i = 0; i < size * size; i++)
+        if (board[i] == '-') return 0;
+    return 1;
 }
 
-int checkDraw(char **board, int size) {
-	for (int i = 0; i < size; i++)
-		for (int j = 0; j < size; j++)
-			if (board[i][j] == '-') return 0;
-	return 1;
-}
-
+// Write move to file
 void logMove(FILE *fp, int r, int c, char symbol) {
-	fprintf(fp, "Player %c: (%d, %d)\n", symbol, r, c);
+    fprintf(fp, "Player %c: (%d, %d)\n", symbol, r, c);
 }
