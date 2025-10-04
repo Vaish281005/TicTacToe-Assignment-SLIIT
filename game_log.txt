@@ -12,52 +12,24 @@ Move 2 by Player O:
 ---+---+---
    |   |   
 
-Move 3 by Player Z:
- X |   |   
----+---+---
-   | O |   
----+---+---
-   |   | Z 
-
-Move 4 by Player X:
+Move 3 by Player X:
  X | X |   
 ---+---+---
    | O |   
 ---+---+---
-   |   | Z 
+   |   |   
 
-Move 5 by Player O:
- X | X | O 
+Move 4 by Player O:
+ X | X |   
 ---+---+---
    | O |   
 ---+---+---
-   |   | Z 
+   |   | O 
 
-Move 6 by Player Z:
- X | X | O 
+Move 5 by Player X:
+ X | X | X 
 ---+---+---
- Z | O |   
+   | O |   
 ---+---+---
-   |   | Z 
-
-Move 7 by Player X:
- X | X | O 
----+---+---
- Z | O |   
----+---+---
- X |   | Z 
-
-Move 8 by Player O:
- X | X | O 
----+---+---
- Z | O |   
----+---+---
- X | O | Z 
-
-Move 9 by Player Z:
- X | X | O 
----+---+---
- Z | O | Z 
----+---+---
- X | O | Z 
+   |   | O 
 
