@@ -1,17 +1,160 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "tictactoe.h"
 
-#define MAX_SIZE 10  // Maximum board size
+int main() {
+    int size, mode;
 
-// Function to initialize the board with spaces
+    // Ask user for board size
+    printf("Enter board size (3 to 10): ");
+    scanf("%d", &size);
+
+    if (size < 3 || size > 10) {
+        printf("Invalid size.\n");
+        return 1;
+    }
+
+    // Ask user for game mode
+    printf("Select mode:\n");
+    printf("1. User vs User\n");
+    printf("2. User vs Computer\n");
+    printf("3. 3-Player Game\n");
+    printf("Enter choice: ");
+    scanf("%d", &mode);
+
+    char board[MAX_SIZE][MAX_SIZE];
+    initializeBoard(board, size); // Fill board with spaces
+
+    FILE *logFile = fopen("game_log.txt", "w"); // Open log file
+    if (logFile == NULL) {
+        printf("Log file error.\n");
+        return 1;
+    }
+
+    srand(time(NULL)); // Seed random for computer moves
+    int moveCount = 0;
+    char winner = ' ';
+    int row, col;
+
+    if (mode == 1) {
+        // Mode 1: User vs User
+        char currentPlayer = 'X';
+        while (1) {
+            displayBoard(board, size);
+            printf("Player %c, enter row and column: ", currentPlayer);
+            scanf("%d %d", &row, &col);
+
+            if (!isValidMove(board, size, row, col)) {
+                printf("Invalid move.\n");
+                continue;
+            }
+
+            makeMove(board, row, col, currentPlayer);
+            moveCount++;
+            writeLog(logFile, board, size, moveCount, currentPlayer);
+
+            winner = checkWinner(board, size);
+            if (winner != ' ') {
+                displayBoard(board, size);
+                printf("Player %c wins!\n", winner);
+                break;
+            }
+
+            if (isDraw(board, size)) {
+                displayBoard(board, size);
+                printf("Draw!\n");
+                break;
+            }
+
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+        }
+    } else if (mode == 2) {
+        // Mode 2: User vs Computer
+        char currentPlayer = 'X';
+        while (1) {
+            displayBoard(board, size);
+            if (currentPlayer == 'X') {
+                printf("Player X, enter row and column: ");
+                scanf("%d %d", &row, &col);
+                if (!isValidMove(board, size, row, col)) {
+                    printf("Invalid move.\n");
+                    continue;
+                }
+            } else {
+                getComputerMove(board, size, &row, &col);
+                printf("Computer chose: %d %d\n", row, col);
+            }
+
+            makeMove(board, row, col, currentPlayer);
+            moveCount++;
+            writeLog(logFile, board, size, moveCount, currentPlayer);
+
+            winner = checkWinner(board, size);
+            if (winner != ' ') {
+                displayBoard(board, size);
+                printf("Player %c wins!\n", winner);
+                break;
+            }
+
+            if (isDraw(board, size)) {
+                displayBoard(board, size);
+                printf("Draw!\n");
+                break;
+            }
+
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+        }
+    } else if (mode == 3) {
+        // Mode 3: 3-Player Game
+        char players[3] = {'X', 'O', 'Z'};
+        int turn = 0;
+        while (1) {
+            displayBoard(board, size);
+            char currentPlayer = players[turn % 3];
+            printf("Player %c, enter row and column: ", currentPlayer);
+            scanf("%d %d", &row, &col);
+
+            if (!isValidMove(board, size, row, col)) {
+                printf("Invalid move.\n");
+                continue;
+            }
+
+            makeMove(board, row, col, currentPlayer);
+            moveCount++;
+            writeLog(logFile, board, size, moveCount, currentPlayer);
+
+            winner = checkWinner(board, size);
+            if (winner != ' ') {
+                displayBoard(board, size);
+                printf("Player %c wins!\n", winner);
+                break;
+            }
+
+            if (isDraw(board, size)) {
+                displayBoard(board, size);
+                printf("Draw!\n");
+                break;
+            }
+
+            turn++;
+        }
+    } else {
+        printf("Invalid mode.\n");
+    }
+
+    fclose(logFile);
+    return 0;
+}
+
+// Fill board with spaces
 void initializeBoard(char board[MAX_SIZE][MAX_SIZE], int size) {
     for (int i = 0; i < size; i++)
         for (int j = 0; j < size; j++)
             board[i][j] = ' ';
 }
 
-// Function to display the board
+// Display the board
 void displayBoard(char board[MAX_SIZE][MAX_SIZE], int size) {
     printf("\n");
     for (int i = 0; i < size; i++) {
@@ -31,17 +174,17 @@ void displayBoard(char board[MAX_SIZE][MAX_SIZE], int size) {
     printf("\n");
 }
 
-// Function to check if a move is valid
+// Check if move is valid
 int isValidMove(char board[MAX_SIZE][MAX_SIZE], int size, int row, int col) {
     return row >= 0 && row < size && col >= 0 && col < size && board[row][col] == ' ';
 }
 
-// Function to place a symbol on the board
+// Place symbol on board
 void makeMove(char board[MAX_SIZE][MAX_SIZE], int row, int col, char symbol) {
     board[row][col] = symbol;
 }
 
-// Function to check for a winner
+// Check for winner
 char checkWinner(char board[MAX_SIZE][MAX_SIZE], int size) {
     for (int i = 0; i < size; i++) {
         char rowSymbol = board[i][0];
@@ -72,7 +215,7 @@ char checkWinner(char board[MAX_SIZE][MAX_SIZE], int size) {
     return ' ';
 }
 
-// Function to check for a draw
+// Check for draw
 int isDraw(char board[MAX_SIZE][MAX_SIZE], int size) {
     for (int i = 0; i < size; i++)
         for (int j = 0; j < size; j++)
@@ -81,172 +224,16 @@ int isDraw(char board[MAX_SIZE][MAX_SIZE], int size) {
     return 1;
 }
 
-// Function to write the board state to a log file
-void writeLog(FILE *logFile, char board[MAX_SIZE][MAX_SIZE], int size, int moveCount, char currentPlayer) {
-    fprintf(logFile, "Move %d by Player %c:\n", moveCount, currentPlayer);
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            fprintf(logFile, " %c ", board[i][j]);
-            if (j < size - 1) fprintf(logFile, "|");
-        }
-        fprintf(logFile, "\n");
-        if (i < size - 1) {
-            for (int k = 0; k < size; k++) {
-                fprintf(logFile, "---");
-                if (k < size - 1) fprintf(logFile, "+");
-            }
-            fprintf(logFile, "\n");
-        }
-    }
-    fprintf(logFile, "\n");
+// Write board state to log file
+void writeLog(FILE *logFile, char board[MAX_SIZE][MAX_SIZE], int size, int moveCount, char currentPlayer){
+	fprintf(logFile, "Move %d by Player %c:\n", moveCount, currentPlayer);
+	//printing board
+	fprintf(logFile, "\n");
 }
 
-// Function for computer to choose a random valid move
 void getComputerMove(char board[MAX_SIZE][MAX_SIZE], int size, int *row, int *col) {
     do {
         *row = rand() % size;
         *col = rand() % size;
     } while (!isValidMove(board, size, *row, *col));
-}
-
-// Main function
-int main() {
-    int size, mode;
-    printf("Enter board size (3 to 10): ");
-    scanf("%d", &size);
-
-    if (size < 3 || size > 10) {
-        printf("Invalid size.\n");
-        return 1;
-    }
-
-    printf("Select mode:\n");
-    printf("1. User vs User\n");
-    printf("2. User vs Computer\n");
-    printf("3. 3-Player Game\n");
-    printf("Enter choice: ");
-    scanf("%d", &mode);
-
-    char board[MAX_SIZE][MAX_SIZE];
-    initializeBoard(board, size);
-
-    FILE *logFile = fopen("game_log.txt", "w");
-    if (logFile == NULL) {
-        printf("Error opening log file.\n");
-        return 1;
-    }
-
-    srand(time(NULL));
-    int moveCount = 0;
-    char winner = ' ';
-    int row, col;
-
-    if (mode == 1) {
-        // User vs User
-        char currentPlayer = 'X';
-        while (1) {
-            displayBoard(board, size);
-            printf("Player %c, enter row and column: ", currentPlayer);
-            scanf("%d %d", &row, &col);
-
-            if (!isValidMove(board, size, row, col)) {
-                printf("Invalid move.\n");
-                continue;
-            }
-
-            makeMove(board, row, col, currentPlayer);
-            moveCount++;
-            writeLog(logFile, board, size, moveCount, currentPlayer);
-
-            winner = checkWinner(board, size);
-            if (winner != ' ') {
-                displayBoard(board, size);
-                printf("Player %c wins!\n", winner);
-                break;
-            }
-
-            if (isDraw(board, size)) {
-                displayBoard(board, size);
-                printf("It's a draw!\n");
-                break;
-            }
-
-            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
-        }
-    } else if (mode == 2) {
-        // User vs Computer
-        char currentPlayer = 'X';
-        while (1) {
-            displayBoard(board, size);
-            if (currentPlayer == 'X') {
-                printf("Player X, enter row and column: ");
-                scanf("%d %d", &row, &col);
-                if (!isValidMove(board, size, row, col)) {
-                    printf("Invalid move.\n");
-                    continue;
-                }
-            } else {
-                getComputerMove(board, size, &row, &col);
-                printf("Computer chose: %d %d\n", row, col);
-            }
-
-            makeMove(board, row, col, currentPlayer);
-            moveCount++;
-            writeLog(logFile, board, size, moveCount, currentPlayer);
-
-            winner = checkWinner(board, size);
-            if (winner != ' ') {
-                displayBoard(board, size);
-                printf("Player %c wins!\n", winner);
-                break;
-            }
-
-            if (isDraw(board, size)) {
-                displayBoard(board, size);
-                printf("It's a draw!\n");
-                break;
-            }
-
-            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
-        }
-    } else if (mode == 3) {
-        // 3-Player Game
-        char players[3] = {'X', 'O', 'Z'};
-        int turn = 0;
-        while (1) {
-            displayBoard(board, size);
-            char currentPlayer = players[turn % 3];
-            printf("Player %c, enter row and column: ", currentPlayer);
-            scanf("%d %d", &row, &col);
-
-            if (!isValidMove(board, size, row, col)) {
-                printf("Invalid move.\n");
-                continue;
-            }
-
-            makeMove(board, row, col, currentPlayer);
-            moveCount++;
-            writeLog(logFile, board, size, moveCount, currentPlayer);
-
-            winner = checkWinner(board, size);
-            if (winner != ' ') {
-                displayBoard(board, size);
-                printf("Player %c wins!\n", winner);
-                break;
-            }
-
-            if (isDraw(board, size)) {
-                displayBoard(board, size);
-                printf("It's a draw!\n");
-                break;
-            }
-
-            turn++;
-        }
-    } else {
-        printf("Invalid mode selected.\n");
-    }
-
-    fclose(logFile);
-    return 0;
 }
